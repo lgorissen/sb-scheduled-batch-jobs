@@ -63,11 +63,20 @@ public class ScheduledTasks {
 			
 
 			
-			Step restBeerStepLocal = steps.get("restBeerStepLocal").allowStartIfComplete(true).<Beer, Beer>chunk(1).reader(restBeerReaderLocal)
-			.processor(restBeerProcessorLocal).writer(restBeerWriterLocal).build();
+			Step restBeerStepLocal = steps.get("restBeerStepLocal")
+					                      .allowStartIfComplete(true)
+					                      .<Beer, Beer>chunk(1)
+					                      .reader(restBeerReaderLocal)
+					                      .processor(restBeerProcessorLocal)
+					                      .writer(restBeerWriterLocal)
+					                      .build();
 			
-			Job restBeerJobLocal = jobs.get("restBeerJobLocal").incrementer(new RunIdIncrementer()).listener(listener).flow(restBeerStepLocal).end()
-					.build();
+			Job restBeerJobLocal = jobs.get("restBeerJobLocal")
+					                   .incrementer(new RunIdIncrementer())
+					                   .listener(listener)
+					                   .flow(restBeerStepLocal)
+					                   .end()
+					                   .build();
 			
 			jobLauncher.run(restBeerJobLocal, new JobParameters());
 		} catch (Exception e) {

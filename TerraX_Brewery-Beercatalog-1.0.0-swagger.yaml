@@ -1,0 +1,160 @@
+swagger: '2.0'
+info:
+  description: This API explores the TerraX beer catalog
+  version: "1.0.0"
+  title: TerraX beer API
+  contact:
+    email: luc@terra10.io
+
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+# tags are used for organizing operations
+tags:
+- name: admins
+  description: Secured Admin-only calls
+- name: developers
+  description: Operations available to regular developers
+
+paths:
+  /beers:
+    get:
+      tags:
+      - developers
+      summary: searches beer inventory
+      operationId: searchBeer
+      description: |
+        By passing in the appropriate options, you can search for
+        available beers in the system
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: searchString
+        description: pass an optional search string for looking up beer
+        required: false
+        type: string
+      - in: query
+        name: skip
+        description: number of records to skip for pagination
+        type: integer
+        format: int32
+        minimum: 0
+      - in: query
+        name: limit
+        description: maximum number of records to return
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 50
+      responses:
+        200:
+          description: search results matching criteria
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Beer'
+          examples: 
+            application/json:
+              - id: d290f1ee-6c54-4b01-90e6-d701748f0851
+                name: TerraX Tripel
+                releaseDate: 2019-01-28T09:12:33.001Z
+                manufacturer:
+                  name: TerraX Brewery
+                  homePage: https://terra10.io
+                  phone: 123-555-666          
+              - id: d290f1ee-6c54-4b01-90e6-d701748f0852
+                name: TerraX Golden Dragon
+                releaseDate: 2019-01-28T09:12:33.001Z
+                manufacturer:
+                  name: TerraX Brewery
+                  homePage: https://terra10.io
+                  phone: 123-555-666          
+              - id: d290f1ee-6c54-4b01-90e6-d701748f0853
+                name: TerraX Bock
+                releaseDate: 2019-01-28T09:12:33.001Z
+                manufacturer:
+                  name: TerraX Brewery
+                  homePage: https://terra10.io
+                  phone: 123-555-666          
+              - id: d290f1ee-6c54-4b01-90e6-d701748f0854
+                name: TerraX Double
+                releaseDate: 2019-01-28T09:12:33.001Z
+                manufacturer:
+                  name: TerraX Brewery
+                  homePage: https://terra10.io
+                  phone: 123-555-666          
+              - id: d290f1ee-6c54-4b01-90e6-d701748f0855
+                name: TerraX Weizen
+                releaseDate: 2019-01-28T09:12:33.001Z
+                manufacturer:
+                  name: TerraX Brewery
+                  homePage: https://terra10.io
+                  phone: 123-555-666
+        400:
+          description: bad input parameter
+    post:
+      tags:
+      - admins
+      summary: adds a beer
+      operationId: addBeer
+      description: Adds a beer to the beer catalog
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: beer
+        description: Beer to add
+        schema:
+          $ref: '#/definitions/Beer'
+      responses:
+        201:
+          description: item created
+        400:
+          description: invalid input, object invalid
+        409:
+          description: an existing item already exists
+definitions:
+  Beer:
+    type: object
+    required:
+    - id
+    - name
+    - manufacturer
+    - releaseDate
+    properties:
+      id:
+        type: string
+        format: uuid
+        example: d290f1ee-6c54-4b01-90e6-d701748f0851
+      name:
+        type: string
+        example: TerraX Tripel
+      releaseDate:
+        type: string
+        format: date-time
+        example: 2019-01-28T09:12:33.001Z
+      manufacturer:
+        $ref: '#/definitions/Manufacturer'
+  Manufacturer:
+    required:
+    - name
+    properties:
+      name:
+        type: string
+        example: TerraX Brewery
+      homePage:
+        type: string
+        format: url
+        example:  https://terra10.io
+      phone:
+        type: string
+        example: 123-555-666
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+basePath: /TerraX_Brewery/Beercatalog/1.0.0
+schemes:
+ - https

@@ -31,14 +31,14 @@ public class BeerCatalogReader implements ItemReader<Beer> {
             beerData = fetchBeerDataFromAPI();
         }
  
-        Beer nextStudent = null;
+        Beer nextBeer = null;
  
         if (nextBeerIndex < beerData.size()) {
-            nextStudent = beerData.get(nextBeerIndex);
+            nextBeer = beerData.get(nextBeerIndex);
             nextBeerIndex++;
         }
  
-        return nextStudent;
+        return nextBeer;
     }
  
     private boolean beerDataIsNotInitialized() {
