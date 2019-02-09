@@ -199,12 +199,142 @@ public class BeerCatalogReader implements ItemReader<Beer> {
 ```
 
 
+### BeerInventoryWriter.java
 
-[highlight code aspects]
+The BeerInventoryWriter is the ItemWriter of the Job. It writes the records to the Beer inventory ... well: we only write a log line
 
-[show that it works / test it]
+```java
+package io.terrax.brewery.beer.inventory.job;
 
-[explain where to find it]
+...
+
+public class BeerInventoryWriter implements ItemWriter<Beer> {
+
+    private static final Logger log = LoggerFactory.getLogger(BeerInventoryWriter.class);
+	
+    @Override
+    public void write(List<? extends Beer> items) throws Exception {  // in the write method, beer records are processed
+
+        items.forEach(i -> log.info("Adding beer to inventory: " + i.getName()));  // instead of writing them to an inventory ...
+                                                                                   // we only write a log line
+    }
+}
+
+```
+
+### BeerProcessor.java
+
+In the BeerProcessor, it is possible to do some processing, like e.g. data enrichment on the received Beer records.
 
 
+```java
+package io.terrax.brewery.beer.inventory.job;
+
+...
+
+public class BeerProcessor implements ItemProcessor<Beer, Beer> {
+
+	private static final Logger log = LoggerFactory.getLogger(BeerProcessor.class);
+
+	@Override
+	public Beer process(Beer item) throws Exception {
+
+		log.info("Processing beer information: {}", item.getName());
+		
+		// you could do some work on the Beer item here
+
+		return item;
+	}
+}
+```
+
+All three together, the BeerCatalogReader, BeerProcessor and BeerInventoryWriter are a typical ETL pattern, where:
+- Extraction: the BeerCatalogReader
+- Transformation: the BeerProcessor
+- Load: the BeerInventoryWriter
+
+
+## Build and Run
+
+The application first has to be build:
+```bash
+developer@developer-VirtualBox:~/projects/scheduled-batch-jobs$ ls
+mvnw      overview.png  README.md  target
+mvnw.cmd  pom.xml       src        TerraX_Brewery-Beercatalog-1.0.0-swagger.yaml
+developer@developer-VirtualBox:~/projects/scheduled-batch-jobs$ ./mvnw clean package
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------------< io.terrax:scheduled-batch-jobs >-------------------
+[INFO] Building scheduled-batch-jobs 0.0.1-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:3.1.0:clean (default-clean) @ scheduled-batch-jobs ---
+[INFO] Deleting /home/developer/projects/scheduled-batch-jobs/target
+[INFO] 
+
+...
+...
+
+[INFO] --- spring-boot-maven-plugin:2.1.2.RELEASE:repackage (repackage) @ scheduled-batch-jobs ---
+[INFO] Replacing main artifact with repackaged archive
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  3.599 s
+[INFO] Finished at: 2019-02-09T20:20:57+01:00
+[INFO] ------------------------------------------------------------------------
+developer@developer-VirtualBox:~/projects/scheduled-batch-jobs$ 
+
+```
+
+After a successful build, the application can be run.
+
+```bash
+developer@developer-VirtualBox:~/projects/scheduled-batch-jobs$ java -jar target/scheduled-batch-jobs-0.0.1-SNAPSHOT.jar 
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.1.2.RELEASE)
+
+2019-02-09 20:25:00.747  INFO 22523 --- [           main] i.t.brewery.beer.inventory.Application   : Starting Application v0.0.1-SNAPSHOT on developer-VirtualBox with PID 22523 (/home/developer/projects/scheduled-batch-jobs/target/scheduled-batch-jobs-0.0.1-SNAPSHOT.jar started by developer in /home/developer/projects/scheduled-batch-jobs)
+2019-02-09 20:25:00.752  INFO 22523 --- [           main] i.t.brewery.beer.inventory.Application   : No active profile set, falling back to default profiles: default
+2019-02-09 20:25:01.744  INFO 22523 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2019-02-09 20:25:01.749  WARN 22523 --- [           main] com.zaxxer.hikari.util.DriverDataSource  : Registered driver with driverClassName=org.hsqldb.jdbcDriver was not found, trying direct instantiation.
+2019-02-09 20:25:02.074  INFO 22523 --- [           main] com.zaxxer.hikari.pool.PoolBase          : HikariPool-1 - Driver does not support get/set network timeout for connections. (feature not supported)
+2019-02-09 20:25:02.080  INFO 22523 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2019-02-09 20:25:02.103  INFO 22523 --- [           main] o.s.b.c.r.s.JobRepositoryFactoryBean     : No database type set, using meta data indicating: HSQL
+2019-02-09 20:25:02.135  INFO 22523 --- [           main] o.s.b.c.l.support.SimpleJobLauncher      : No TaskExecutor has been set, defaulting to synchronous executor.
+2019-02-09 20:25:02.363  INFO 22523 --- [           main] o.s.s.c.ThreadPoolTaskScheduler          : Initializing ExecutorService 'taskScheduler'
+2019-02-09 20:25:02.414  INFO 22523 --- [           main] i.t.brewery.beer.inventory.Application   : Started Application in 2.106 seconds (JVM running for 2.629)
+2019-02-09 20:25:02.416  INFO 22523 --- [           main] o.s.b.a.b.JobLauncherCommandLineRunner   : Running default command line with: []
+2019-02-09 20:25:02.417  INFO 22523 --- [   scheduling-1] i.t.b.beer.inventory.ScheduledTasks      : Updating beer inventory for Terra10 20:25:02
+2019-02-09 20:25:02.559  INFO 22523 --- [   scheduling-1] o.s.b.c.l.support.SimpleJobLauncher      : Job: [FlowJob: [name=restBeerJobLocal]] launched with the following parameters: [{}]
+2019-02-09 20:25:02.596  INFO 22523 --- [   scheduling-1] o.s.batch.core.job.SimpleStepHandler     : Executing step: [restBeerStepLocal]
+2019-02-09 20:25:03.569  INFO 22523 --- [   scheduling-1] i.t.b.beer.inventory.job.BeerProcessor   : Processing beer information: TerraX Tripel
+2019-02-09 20:25:03.570  INFO 22523 --- [   scheduling-1] i.t.b.b.i.job.BeerInventoryWriter        : Adding beer to inventory: TerraX Tripel
+2019-02-09 20:25:03.573  INFO 22523 --- [   scheduling-1] i.t.b.beer.inventory.job.BeerProcessor   : Processing beer information: TerraX Golden Dragon
+2019-02-09 20:25:03.573  INFO 22523 --- [   scheduling-1] i.t.b.b.i.job.BeerInventoryWriter        : Adding beer to inventory: TerraX Golden Dragon
+2019-02-09 20:25:03.575  INFO 22523 --- [   scheduling-1] i.t.b.beer.inventory.job.BeerProcessor   : Processing beer information: TerraX Bock
+2019-02-09 20:25:03.575  INFO 22523 --- [   scheduling-1] i.t.b.b.i.job.BeerInventoryWriter        : Adding beer to inventory: TerraX Bock
+2019-02-09 20:25:03.577  INFO 22523 --- [   scheduling-1] i.t.b.beer.inventory.job.BeerProcessor   : Processing beer information: TerraX Double
+2019-02-09 20:25:03.577  INFO 22523 --- [   scheduling-1] i.t.b.b.i.job.BeerInventoryWriter        : Adding beer to inventory: TerraX Double
+2019-02-09 20:25:03.579  INFO 22523 --- [   scheduling-1] i.t.b.beer.inventory.job.BeerProcessor   : Processing beer information: TerraX Weizen
+2019-02-09 20:25:03.580  INFO 22523 --- [   scheduling-1] i.t.b.b.i.job.BeerInventoryWriter        : Adding beer to inventory: TerraX Weizen
+2019-02-09 20:25:03.589  INFO 22523 --- [   scheduling-1] .b.b.i.JobCompletionNotificationListener : Job Completed: beer inventory updated!
+2019-02-09 20:25:03.591  INFO 22523 --- [   scheduling-1] o.s.b.c.l.support.SimpleJobLauncher      : Job: [FlowJob: [name=restBeerJobLocal]] completed with the following parameters: [{}] and the following status: [COMPLETED]
+2019-02-09 20:25:08.592  INFO 22523 --- [   scheduling-1] i.t.b.beer.inventory.ScheduledTasks      : Updating beer inventory for Terra10 20:25:08
+2019-02-09 20:25:08.628  INFO 22523 --- [   scheduling-1] o.s.b.c.l.support.SimpleJobLauncher      : Job: [FlowJob: [name=restBeerJobLocal]] launched with the following parameters: [{}]
+2019-02-09 20:25:08.639  INFO 22523 --- [   scheduling-1] o.s.batch.core.job.SimpleStepHandler     : Executing step: [restBeerStepLocal]
+
+```
+Watch the log lines to see the beer records being processed.
+
+All the sources can be found on github: https://github.com/lgorissen/sb-scheduled-batch-jobs 
+
+Enjoy!
+ 
 
